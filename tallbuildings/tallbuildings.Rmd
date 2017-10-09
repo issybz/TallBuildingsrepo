@@ -1,0 +1,138 @@
+---
+title: "tallbuildings"
+author: "Issy Belzil & Mikaela Murgoitio"
+date: '2017-10-03'
+output: html_document
+---
+### Setting up:
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readxl)
+tallbuild=read_excel("tallestbuildings.xlsx")  
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+```
+
+### 1: Please display how many buildings are there in each city represented in that dataset. An arrangement in either an ascending or a descending order of number of buildings is always helpful to an eye.
+
+```{r}
+summary(tallbuild)
+```
+
+```{r}
+tallbuild %>% group_by(City) %>% summarise(cnt = n()) %>% arrange(desc(cnt)) 
+```
+
+### 2: Please plot different cities in order of the mean height of buildings in a city.
+
+```{r}
+names(tallbuild)[names(tallbuild) == 'Height (ft)'] <- 'Heightft'
+```
+
+
+```{r}
+tallb=tallbuild%>%group_by(City)%>%summarize(meanb =mean(Heightft))
+#%>% arrange(desc(mean))
+```
+
+
+```{r}
+str(tallb)
+```
+
+### 2: 
+
+```{r}
+ggplot(data = tallb, aes(x=reorder(City,meanb),  y=meanb)) + geom_point(stat="identity", fill="blue")+coord_flip() +labs(list(title = "Cities ranked by the number of tall buildings", x="Cities", y="Mean Height of Buildings"))
+```
+
+
+```{r}
+library(countrycode)
+```
+
+### 3: 3 and 4. Please redo 1 and 2 using the country information that is given. (Note that the country variable is present with the city variable. Perhaps a split of that variable is necessary.) You may want to check out the countrycode package to get the full names of different countries instead of relying on the cryptic country codes that are present in that dataset.
+
+
+?countrycode_data
+
+
+```{r}
+tallb2=tallbuild %>% separate(City, c("City", "CountryCode"), sep="[:punct:]")
+str(tallb2)
+```
+
+> install.packages("countrycode")
+> library(countrycode)
+
+```{r}
+ggplot(data = tallb, aes(x=reorder(City,meanb),  y=meanb)) + geom_point(stat="identity", fill="blue")+coord_flip() +labs(list(title = "Mean Height of Buildings in Each Country", x = "Country", y = "Height (ft)"))
+```
+
+
+```{r}
+tallb2$Country=countrycode(tallb2$CountryCode, "iso2c", "country.name", warn = TRUE, custom_dict = NULL,
+  custom_match =NULL, origin_regex = FALSE)
+```
+
+
+### 3: 
+```{r}
+str(tallb2)
+tallb2 %>% group_by(Country) %>% summarise(cnt = n()) %>% arrange(desc(cnt)) 
+```
+
+
+```{r}
+names(tallb2)[names(tallb2) == 'Height (ft)'] <- 'Heightft'
+```
+
+
+```{r}
+tallb3=tallb2%>%group_by(Country)%>%summarize(meanb =mean(Heightft))
+#%>% arrange(desc(mean))
+```
+
+
+```{r}
+str(tallb3)
+```
+
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+### 4:
+
+```{r}
+ggplot(data = tallb3 , aes(x=reorder(Country,meanb),  y=meanb)) + geom_point(stat="identity", fill="blue")+coord_flip() + labs(list(title = "Buildings by Mean Height", x = "Country", y = "Mean Height of Buildings (ft)"))
+
+```
+
+### 5: In 4 above, you would’ve plot different countries in order of their mean height of a buildings in a city. If you have not used a bar graph there, please create a bar graph. In this bar graph, please color each bar for a country based on the number of buildings from this dataset that are present in that country.
+
+```{r}
+
+tallbcount = tallb2 %>% group_by(Country) %>% summarise(Bcount = n(),meanheight =mean(Heightft)) 
+```
+
+
+```{r}
+ggplot(data = tallbcount, aes(x=reorder(Country,meanheight),  y=meanheight, fill=as.factor(Bcount))) + geom_bar(stat="identity", alpha=.60)+coord_flip() + scale_fill_brewer(palette="Paired") + labs(list(title = "Countries Count of Buildings in Order of Mean Heights", x = "Country", y = "Mean Height of Tall Buildings (ft)"))
+```
+
+### 6: What are the mean heights (in feet) of buildings that are used for diferent purposes. (Here, you will have different purposes in a column and the corresponding mean height in a different column.) In computing this, it is okay to double or triple count a building if it has mutliple uses. 
+
+```{r}
+tallbuse = tallbuild %>% group_by(Use) %>% summarise(meanheight =mean(Heightft)) 
+str(tallbuse)
+
+ggplot(data = tallbuse, aes(x=reorder(Use, meanheight),  y=meanheight, fill=meanheight )) + geom_bar(stat="identity", alpha=.60)+coord_flip() + labs(list(title = "Comparing Mean Height of Buildings to the Use", x = "Usage of Building", y = "Mean Height of Tall Buildings"))
+
+```
+
